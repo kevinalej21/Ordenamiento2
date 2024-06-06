@@ -2,9 +2,11 @@ import java.util.Random;
 
 public class List {
     private Node head;
+    private Node originalListHead;
 
     public List() {
         this.head = null;
+        this.originalListHead = null;
     }
 
     // Método para verificar si la lista está vacía
@@ -26,14 +28,38 @@ public class List {
         }
     }
 
-    // Método para imprimir la lista
-
-    public void printList() {
-        System.out.println("Lista generada aleatoriamente:");
-        printRandomList();
+    // Método para agregar un nodo al final de la lista original
+    public void addToOriginalList(int data) {
+        Node newNode = new Node(data);
+        if (originalListHead == null) {
+            originalListHead = newNode;
+        } else {
+            Node current = originalListHead;
+            while (current.next != null) {
+                current = current.next;
+            }
+            current.next = newNode;
+        }
     }
-    
-    private void printRandomList() {
+
+    // Método para imprimir ambas listas
+    public void printList() {
+        System.out.println("Lista original:");
+        printOriginalList();
+        System.out.println("Lista ordenada:");
+        printSortedList();
+    }
+
+    private void printOriginalList() {
+        Node current = originalListHead;
+        while (current != null) {
+            System.out.print(current.data + " ");
+            current = current.next;
+        }
+        System.out.println();
+    }
+
+    private void printSortedList() {
         Node current = head;
         while (current != null) {
             System.out.print(current.data + " ");
@@ -41,20 +67,23 @@ public class List {
         }
         System.out.println();
     }
-    
 
-    // Método para generar una lista de tamaño aleatorio
+    // Método para generar dos listas aleatorias
     public void generateRandomList(int size) {
         Random random = new Random();
         for (int i = 0; i < size; i++) {
-            add(random.nextInt(100)); // Genera números aleatorios entre 0 y 99
+            int randomValue = random.nextInt(100);
+            add(randomValue);
+            addToOriginalList(randomValue);
         }
     }
 
-    public void bubbleSort() {
+    public double bubbleSort() {
         if (head == null || head.next == null) {
-            return;
+            return 0;
         }
+
+        long startTime = System.nanoTime();
 
         boolean swapped;
         do {
@@ -87,12 +116,17 @@ public class List {
                 }
             }
         } while (swapped);
+
+        long endTime = System.nanoTime();
+        return (endTime - startTime) / 1_000_000_000.0;
     }
 
-    public void selectionSort() {
+    public double selectionSort() {
         if (head == null || head.next == null) {
-            return;
+            return 0;
         }
+
+        long startTime = System.nanoTime();
 
         Node current = head;
         while (current != null) {
@@ -112,12 +146,17 @@ public class List {
 
             current = current.next;
         }
+
+        long endTime = System.nanoTime();
+        return (endTime - startTime) / 1_000_000_000.0;
     }
 
-    public void insertionSort() {
+    public double insertionSort() {
         if (head == null || head.next == null) {
-            return;
+            return 0;
         }
+
+        long startTime = System.nanoTime();
 
         Node sorted = null; // Lista ordenada
         Node current = head; // Nodo actual en la lista original
@@ -142,12 +181,17 @@ public class List {
         }
 
         head = sorted; // Actualizar la cabeza de la lista original a la lista ordenada
+
+        long endTime = System.nanoTime();
+        return (endTime - startTime) / 1_000_000_000.0;
     }
 
-    public void shellSort() {
+    public double shellSort() {
         if (head == null || head.next == null) {
-            return;
+            return 0;
         }
+
+        long startTime = System.nanoTime();
 
         int n = getSize();
         int gap = n / 2; // Inicializa el tamaño de la brecha
@@ -167,43 +211,18 @@ public class List {
 
             gap /= 2; // Reduce el tamaño de la brecha
         }
+
+        long endTime = System.nanoTime();
+        return (endTime - startTime) / 1_000_000_000.0;
     }
 
-    private int getSize() {
-        int size = 0;
-        Node current = head;
-        while (current != null) {
-            size++;
-            current = current.next;
-        }
-        return size;
-    }
+    public double quickSort() {
+        long startTime = System.nanoTime();
 
-    private int getNodeValue(int index) {
-        Node current = head;
-        for (int i = 0; i < index && current != null; i++) {
-            current = current.next;
-        }
-        if (current != null) {
-            return current.data;
-        }
-        throw new IndexOutOfBoundsException("Index out of range");
-    }
-
-    private void setNodeValue(int index, int value) {
-        Node current = head;
-        for (int i = 0; i < index && current != null; i++) {
-            current = current.next;
-        }
-        if (current != null) {
-            current.data = value;
-        } else {
-            throw new IndexOutOfBoundsException("Index out of range");
-        }
-    }
-
-    public void quickSort() {
         head = quickSortRec(head);
+
+        long endTime = System.nanoTime();
+        return (endTime - startTime) / 1_000_000_000.0;
     }
 
     private Node quickSortRec(Node node) {
@@ -297,15 +316,46 @@ public class List {
     }
 
     private Node getPreviousNode(Node node) {
-        if (node == null || node == head) {
-            throw new IllegalArgumentException("Node cannot be null or head node.");
-        }
-
         Node current = head;
-        while (current != null && current.next != node) {
+        Node previous = null;
+
+        while (current != null && current != node) {
+            previous = current;
             current = current.next;
         }
-        return current;
+
+        return previous;
     }
 
+    private int getSize() {
+        int size = 0;
+        Node current = head;
+        while (current != null) {
+            size++;
+            current = current.next;
+        }
+        return size;
+    }
+
+    private int getNodeValue(int index) {
+        Node current = head;
+        for (int i = 0; i < index; i++) {
+            if (current == null) {
+                throw new IndexOutOfBoundsException("Index out of bounds.");
+            }
+            current = current.next;
+        }
+        return current.data;
+    }
+
+    private void setNodeValue(int index, int value) {
+        Node current = head;
+        for (int i = 0; i < index; i++) {
+            if (current == null) {
+                throw new IndexOutOfBoundsException("Index out of bounds.");
+            }
+            current = current.next;
+        }
+        current.data = value;
+    }
 }
