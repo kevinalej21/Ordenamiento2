@@ -5,6 +5,7 @@ public class List {
     private Node originalListHead;
     private List randomList;
     private List sortedList;
+
     public List() {
         this.head = null;
         this.originalListHead = null;
@@ -12,12 +13,10 @@ public class List {
         this.sortedList = null;
     }
 
-    // Método para verificar si la lista está vacía
     public boolean isEmpty() {
         return head == null;
     }
 
-    // Método para agregar un nodo al final de la lista
     public void add(int data) {
         Node newNode = new Node(data);
         if (head == null) {
@@ -31,7 +30,6 @@ public class List {
         }
     }
 
-    // Método para agregar un nodo al final de la lista original
     public void addToOriginalList(int data) {
         Node newNode = new Node(data);
         if (originalListHead == null) {
@@ -45,7 +43,6 @@ public class List {
         }
     }
 
-    // Método para imprimir ambas listas
     public void printList() {
         System.out.println("Lista original:");
         printOriginalList();
@@ -71,7 +68,6 @@ public class List {
         System.out.println();
     }
 
-    // Método para generar dos listas aleatorias
     public void generateRandomList(int size) {
         Random random = new Random();
         randomList = new List(); // Inicializar randomList
@@ -220,131 +216,130 @@ public class List {
         long endTime = System.nanoTime();
         return (endTime - startTime) / 1_000_000_000.0;
     }
+
     public double quickSort() {
+        if (head == null || head.next == null) {
+            return 0;
+        }
+
         long startTime = System.nanoTime();
-    
-        sortedList = randomList.clone(); // Clonar la lista aleatoria a sortedList
-        sortedList.head = quickSortRec(sortedList.head);
-    
+        head = quickSortRec(head);
         long endTime = System.nanoTime();
+
         return (endTime - startTime) / 1_000_000_000.0;
     }
-    public List clone() {
-        List clone = new List();
-        Node current = head;
-        while (current != null) {
-            clone.add(current.data);
-            current = current.next;
-        }
-        return clone;
-    }
 
-    private Node quickSortRec(Node node) {
-        if (node == null || node.next == null) {
-            return node;
+    private Node quickSortRec(Node head) {
+        if (head == null || head.next == null) {
+            return head;
         }
-    
-        Node pivot = node;
-        Node current = node.next;
-        Node smallerHead = new Node(0); // Lista de nodos menores que el pivote
-        Node smallerTail = smallerHead;
-        Node greaterHead = new Node(0); // Lista de nodos mayores o iguales al pivote
-        Node greaterTail = greaterHead;
-    
+
+        Node pivot = head;
+        Node less = null, equal = null, greater = null;
+        Node current = head;
+
         while (current != null) {
             if (current.data < pivot.data) {
-                smallerTail.next = current;
-                smallerTail = current;
+                less = appendNode(less, current.data);
+            } else if (current.data == pivot.data) {
+                equal = appendNode(equal, current.data);
             } else {
-                greaterTail.next = current;
-                greaterTail = current;
+                greater = appendNode(greater, current.data);
             }
             current = current.next;
         }
-    
-        smallerTail.next = null;
-        greaterTail.next = null;
-    
-        Node sortedSmaller = quickSortRec(smallerHead.next);
-        Node sortedGreater = quickSortRec(greaterHead.next);
-    
-        return concatenate(sortedSmaller, pivot, sortedGreater);
+
+        less = quickSortRec(less);
+        greater = quickSortRec(greater);
+
+        return concatenate(less, equal, greater);
     }
-    
-    private Node concatenate(Node smaller, Node pivot, Node greater) {
-        if (smaller == null) {
-            pivot.next = greater;
-            return pivot;
+
+    private Node appendNode(Node list, int data) {
+        Node newNode = new Node(data);
+        if (list == null) {
+            return newNode;
         } else {
-            Node current = smaller;
+            Node current = list;
             while (current.next != null) {
                 current = current.next;
             }
-            current.next = pivot;
-            pivot.next = greater;
-            return smaller;
+            current.next = newNode;
+            return list;
         }
     }
-    
+
+    private Node concatenate(Node less, Node equal, Node greater) {
+        Node result = null, current = null;
+
+        if (less != null) {
+            result = less;
+            current = less;
+            while (current.next != null) {
+                current = current.next;
+            }
+        }
+
+        if (equal != null) {
+            if (result == null) {
+                result = equal;
+            } else {
+                current.next = equal;
+            }
+            current = equal;
+            while (current.next != null) {
+                current = current.next;
+            }
+        }
+
+        if (greater != null) {
+            if (result == null) {
+                result = greater;
+            } else {
+                current.next = greater;
+            }
+        }
+
+        return result;
+    }
+
     public boolean sequentialSearch(int key) {
         Node current = head;
         while (current != null) {
             if (current.data == key) {
-                return true; // El elemento se encuentra en la lista
+                return true;
             }
             current = current.next;
         }
-        return false; // El elemento no se encuentra en la lista
+        return false;
     }
 
     public boolean binarySearch(int key) {
-        // Primero, asegúrate de que la lista esté ordenada
-        quickSort();
+        // Convertir la lista a un array para realizar la búsqueda binaria
+        int size = getSize();
+        int[] array = new int[size];
+        Node current = head;
+        for (int i = 0; i < size; i++) {
+            array[i] = current.data;
+            current = current.next;
+        }
 
-        Node left = head;
-        Node right = getLastNode();
+        int left = 0;
+        int right = size - 1;
 
-        while (left != null && right != null && left != right && left != right.next) {
-            int midValue = getMiddleValue(left, right);
-            if (midValue == key) {
-                return true; // El elemento se encuentra en la lista
-            } else if (midValue < key) {
-                left = left.next;
+        while (left <= right) {
+            int middle = left + (right - left) / 2;
+            if (array[middle] == key) {
+                return true;
+            }
+            if (array[middle] < key) {
+                left = middle + 1;
             } else {
-                right = getPreviousNode(right);
+                right = middle - 1;
             }
         }
-        return false; // El elemento no se encuentra en la lista
-    }
 
-    private Node getLastNode() {
-        Node current = head;
-        while (current != null && current.next != null) {
-            current = current.next;
-        }
-        return current;
-    }
-
-    private int getMiddleValue(Node left, Node right) {
-        if (left == null || right == null) {
-            throw new IllegalArgumentException("Left and right nodes cannot be null.");
-        }
-
-        int leftValue = left.data;
-        int rightValue = right.data;
-        return leftValue + (rightValue - leftValue) / 2;
-    }
-
-    private Node getPreviousNode(Node node) {
-        Node current = head;
-        Node previous = null;
-
-        while (current != null && current != node) {
-            previous = current;
-            current = current.next;
-        }
-
-        return previous;
+        return false;
     }
 
     private int getSize() {
@@ -361,7 +356,7 @@ public class List {
         Node current = head;
         for (int i = 0; i < index; i++) {
             if (current == null) {
-                throw new IndexOutOfBoundsException("Index out of bounds.");
+                throw new IndexOutOfBoundsException("Índice fuera de rango");
             }
             current = current.next;
         }
@@ -372,7 +367,7 @@ public class List {
         Node current = head;
         for (int i = 0; i < index; i++) {
             if (current == null) {
-                throw new IndexOutOfBoundsException("Index out of bounds.");
+                throw new IndexOutOfBoundsException("Índice fuera de rango");
             }
             current = current.next;
         }
