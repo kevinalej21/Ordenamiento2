@@ -3,10 +3,13 @@ import java.util.Random;
 public class List {
     private Node head;
     private Node originalListHead;
-
+    private List randomList;
+    private List sortedList;
     public List() {
         this.head = null;
         this.originalListHead = null;
+        this.randomList = null;
+        this.sortedList = null;
     }
 
     // Método para verificar si la lista está vacía
@@ -71,13 +74,15 @@ public class List {
     // Método para generar dos listas aleatorias
     public void generateRandomList(int size) {
         Random random = new Random();
+        randomList = new List(); // Inicializar randomList
         for (int i = 0; i < size; i++) {
             int randomValue = random.nextInt(100);
             add(randomValue);
             addToOriginalList(randomValue);
+            randomList.add(randomValue); // Agregar a randomList también
         }
     }
-
+    
     public double bubbleSort() {
         if (head == null || head.next == null) {
             return 0;
@@ -215,36 +220,37 @@ public class List {
         long endTime = System.nanoTime();
         return (endTime - startTime) / 1_000_000_000.0;
     }
-
     public double quickSort() {
         long startTime = System.nanoTime();
-
-        head = quickSortRec(head);
-
+    
+        sortedList = randomList.clone(); // Clonar la lista aleatoria a sortedList
+        sortedList.head = quickSortRec(sortedList.head);
+    
         long endTime = System.nanoTime();
         return (endTime - startTime) / 1_000_000_000.0;
+    }
+    public List clone() {
+        List clone = new List();
+        Node current = head;
+        while (current != null) {
+            clone.add(current.data);
+            current = current.next;
+        }
+        return clone;
     }
 
     private Node quickSortRec(Node node) {
         if (node == null || node.next == null) {
             return node;
         }
-
-        Node pivot = partition(node);
-        pivot.next = quickSortRec(pivot.next);
-        node = quickSortRec(node);
-
-        return node;
-    }
-
-    private Node partition(Node node) {
+    
         Node pivot = node;
         Node current = node.next;
-        Node smallerHead = new Node(0);
+        Node smallerHead = new Node(0); // Lista de nodos menores que el pivote
         Node smallerTail = smallerHead;
-        Node greaterHead = new Node(0);
+        Node greaterHead = new Node(0); // Lista de nodos mayores o iguales al pivote
         Node greaterTail = greaterHead;
-
+    
         while (current != null) {
             if (current.data < pivot.data) {
                 smallerTail.next = current;
@@ -255,17 +261,31 @@ public class List {
             }
             current = current.next;
         }
-
+    
         smallerTail.next = null;
         greaterTail.next = null;
-
-        Node newHead = smallerHead.next != null ? partition(smallerHead.next) : smallerHead.next;
-        smallerTail.next = pivot;
-        pivot.next = greaterHead.next != null ? partition(greaterHead.next) : greaterHead.next;
-
-        return newHead != null ? newHead : pivot;
+    
+        Node sortedSmaller = quickSortRec(smallerHead.next);
+        Node sortedGreater = quickSortRec(greaterHead.next);
+    
+        return concatenate(sortedSmaller, pivot, sortedGreater);
     }
-
+    
+    private Node concatenate(Node smaller, Node pivot, Node greater) {
+        if (smaller == null) {
+            pivot.next = greater;
+            return pivot;
+        } else {
+            Node current = smaller;
+            while (current.next != null) {
+                current = current.next;
+            }
+            current.next = pivot;
+            pivot.next = greater;
+            return smaller;
+        }
+    }
+    
     public boolean sequentialSearch(int key) {
         Node current = head;
         while (current != null) {
